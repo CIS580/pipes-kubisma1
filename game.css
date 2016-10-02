@@ -1,4 +1,29 @@
-canvas#screen {
+div#container{
+  width: 100%;
+  overflow: auto;
+  padding-top: 3em;
+  padding-bottom: 1em;
+}
+
+canvas#screen, canvas#queue {
+  position: relative;
+  float: left;
   border: 2px solid #333;
   box-shadow: 4px 4px 4px #777;
+}
+
+canvas#queue{
+  margin-left: 1.5em;
+}
+
+canvas#queue::before{
+  content: " ";
+  width: 30px;
+  height: 30px;
+  background-image: url('./assets/arrow.png');
+  display: block;
+  background-repeat: repeat-x;
+  position: relative;
+  top: -3em;
+  left: 0.8em;
 }
