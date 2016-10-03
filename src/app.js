@@ -1,7 +1,7 @@
 "use strict";
 
 const CELL_SIZE = 45;
-const TIMEOUT = 2000;
+const TIMEOUT = 5000;
 
 /* Classes */
 const Game = require('./game');
@@ -17,11 +17,35 @@ var imageCoordsManager = new ImageCoordsManager();
 var queueManager = new QueueManager();
 var grid = new Grid(canvas.width, canvas.height);
 
+var level = 1;
+var score = 0;
+var currentIndex;
+var currentX;
+var currentY;
+
+/* Audio */
+var select = new Audio();
+select.src = './assets/music/select.wav';
+var invalid = new Audio();
+invalid.src = './assets/music/invalid.wav';
+var levelup = new Audio();
+levelup.src = './assets/music/levelup.wav';
+var gameover = new Audio();
+gameover.src = './assets/music/gameover.wav';
+var background = new Audio();
+background.src = './assets/music/background.wav';
+background.loop = true;
+background.play();
+
 canvas.onclick = function(event) {
   event.preventDefault();
 
+  if(game.paused) return invalid.play();
+
   var clickPosition = grid.getClickPosition(event.offsetX, event.offsetY);
-  if(!grid.isValidClick(clickPosition, true)) return;
+  if(!grid.isValidClick(clickPosition, true)) return invalid.play();
+
+  select.play();
 
   grid.placeSegment(clickPosition, new Segment(queueManager.pop()));
   queueManager.push(imageCoordsManager.getNextImage(true));
@@ -30,8 +54,12 @@ canvas.onclick = function(event) {
 canvas.oncontextmenu = function(event) {
   event.preventDefault();
 
+  if(game.paused) return invalid.play();
+
   var clickPosition = grid.getClickPosition(event.offsetX, event.offsetY);
-  if(!grid.isValidClick(clickPosition, false)) return;
+  if(!grid.isValidClick(clickPosition, false)) return invalid.play();
+
+  select.play();
 
   var segment = grid.getSegment(clickPosition);
   var newProperties = imageCoordsManager.getNextCoords(segment.imageProperties.x, segment.imageProperties.y);
@@ -43,7 +71,7 @@ canvas.oncontextmenu = function(event) {
   grid.placeSegment(clickPosition, segment);
 }
 
-var currentIndex, currentX, currentY;
+
 canvas.onmousemove = function(event) {
   event.preventDefault();
   currentX = event.offsetX;
@@ -53,12 +81,12 @@ canvas.onmousemove = function(event) {
   currentIndex = y * 27 + x;
 }
 
-function newLevel(level = 1) {
+function newLevel(lvl) {
 
-  if(level > 1) {
-    setTimeout(function(){
-      queueManager.clear();
-    }, TIMEOUT);
+  if(lvl > 1) {
+    score += Math.floor(1000 * Math.sqrt(lvl));
+    queueManager.clear();
+    grid.reset(lvl);
   }
 
   grid.placeStartingSegment(new Segment(imageCoordsManager.getNextImage(false), false));
@@ -71,6 +99,32 @@ function newLevel(level = 1) {
 
 }
 
+function checkGameStatus(ctx) {
+
+  if(grid.levelCompleted()){
+    ctx.fillStyle = "#fff";
+    ctx.font = "bold 2.5em Georgia";
+    ctx.fillText("Level completed! ", 420, 340);
+
+    levelup.play();
+
+    game.pause(true);
+    setTimeout(function() {
+      game.pause(false);
+      newLevel(++level);
+    }, TIMEOUT);
+  } else if (grid.gameOver()) {
+    ctx.fillStyle = "#fff";
+    ctx.font = "bold 2.5em Georgia";
+    ctx.fillText("Game over! ", 470, 340);
+
+    gameover.play();
+
+    game.pause(true);
+  }
+
+}
+
 /**
  * @function masterLoop
  * Advances the game in sync with the refresh rate of the screen
@@ -80,7 +134,7 @@ var masterLoop = function(timestamp) {
   game.loop(timestamp);
   window.requestAnimationFrame(masterLoop);
 }
-newLevel();
+newLevel(level);
 masterLoop(performance.now());
 
 
@@ -93,9 +147,7 @@ masterLoop(performance.now());
  * the number of milliseconds passed since the last frame.
  */
 function update(elapsedTime) {
-
-  // TODO: Advance the fluid
-  //console.log(imageCoordsManager.getNextImage(true));
+  grid.update(elapsedTime);
 }
 
 /**
@@ -109,17 +161,20 @@ function render(elapsedTime, ctx) {
   ctx.fillStyle = "#777777";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // TODO: Render the board
-  //ctx.drawImage(image, 0, 0, 31, 31, 0, 0, 63, 63);
-  //ctx.drawImage(image, 96, 32, 31, 31, 64, 0, 63, 63);
   queueManager.render();
   grid.render(elapsedTime, ctx);
+
+  checkGameStatus(ctx);
+
+  ctx.fillStyle = "#fff";
+  ctx.font = "bold 1em Georgia";
+  ctx.fillText("Level: " + level, 10, 20);
+  ctx.fillText("Score: " + score, 10, 40);
 
   var x = currentIndex % 27;
   var y = Math.floor(currentIndex / 27);
   ctx.fillStyle = "#ff000000";
   ctx.beginPath();
-  ctx.arc(currentX, currentY, 3, 0, 2*Math.PI);
   ctx.rect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
   ctx.stroke();
 

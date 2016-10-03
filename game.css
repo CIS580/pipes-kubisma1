@@ -16,14 +16,6 @@ canvas#queue{
   margin-left: 1.5em;
 }
 
-canvas#queue::before{
-  content: " ";
-  width: 30px;
-  height: 30px;
-  background-image: url('./assets/arrow.png');
-  display: block;
-  background-repeat: repeat-x;
-  position: relative;
-  top: -3em;
-  left: 0.8em;
+p#instructions{
+  width: 50%;
 }

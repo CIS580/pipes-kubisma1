@@ -46,4 +46,6 @@ The bundle will automatically be re-created every time you change a source file.
 ## Credits
 Pipe tiles by surt, and released into the public domain on [OpenGameArt.com](http://opengameart.org/content/plums)
 
+Background music by Setuniman was released on [freesound](https://www.freesound.org/people/Setuniman/sounds/274787/) under the [CC-A-SA 3.0 License](https://creativecommons.org/licenses/by-sa/3.0/).
+
 Game framework HTML5/CSS3/Javascirpt code was written by course instructor [Nathan Bean](http://nathanhbean.com), and also released under the [CC-A-SA 3.0 License](https://creativecommons.org/licenses/by-sa/3.0/)
